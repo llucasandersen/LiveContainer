@@ -129,7 +129,10 @@
     void (^updateSceneSettings)(id) = ^void(UIMutableApplicationSceneSettings *settings) {
         settings.canShowAlerts = YES;
         settings.cornerRadiusConfiguration = [[PrivClass(BSCornerRadiusConfiguration) alloc] initWithTopLeft:self.view.layer.cornerRadius bottomLeft:self.view.layer.cornerRadius bottomRight:self.view.layer.cornerRadius topRight:self.view.layer.cornerRadius];
-        settings.displayConfiguration = UIScreen.mainScreen.displayConfiguration;
+        UIScreen *screen = self.view.window.windowScene.screen;
+        if (screen) {
+            settings.displayConfiguration = screen.displayConfiguration;
+        }
         settings.foreground = YES;
         //settings.interruptionPolicy = 2; // reconnect
         settings.level = 1;
@@ -260,6 +263,7 @@
 }
 
 - (void)viewWillLayoutSubviews {
+    [super viewWillLayoutSubviews];
     /// For native window we let iPadOS handle it however it wants, which is usually live resize (autoresizingMask set in appSceneVCWillActivateScene)
     if(_contentView.autoresizingMask != (UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight)) {
         [self updateFrameWithSettingsBlock:nil];
@@ -274,7 +278,7 @@
         [self updateSettingsWithBlock:^(UIMutableApplicationSceneSettings *settings) {
             settings.deviceOrientation = UIDevice.currentDevice.orientation;
             settings.interfaceOrientation = self.view.window.windowScene.interfaceOrientation;
-            CGRect frame = self.view.frame;
+            CGRect frame = self.view.bounds;
             if(!self.usesHostingControllerAPI) {
                 frame.size.width /= self.scaleRatio;
                 frame.size.height /= self.scaleRatio;

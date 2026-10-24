@@ -71,7 +71,8 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate, ObservableObject { // Make
         if newOptions == nil {
             newOptions = UIScene.ActivationRequestOptions()
         }
-        newOptions!._setRequestFullscreen(UIScreen.main.bounds == self.keyWindow!.bounds)
+        // Let the system choose the new scene's presentation. Screen dimensions
+        // do not describe a source window while the device folds or resizes.
         self.hook_requestSceneSessionActivation(sceneSession, userActivity: userActivity, options: newOptions, errorHandler: errorHandler)
     }
     

@@ -544,7 +544,7 @@
     // scale peripheryInsets to match the scale ratio
     settings.peripheryInsets = UIEdgeInsetsMake(settings.peripheryInsets.top/_scaleRatio, settings.peripheryInsets.left/_scaleRatio, settings.peripheryInsets.bottom/_scaleRatio, settings.peripheryInsets.right/_scaleRatio);
     if(UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPad) {
-        UIInterfaceOrientation currentOrientation = UIApp.statusBarOrientation;
+        UIInterfaceOrientation currentOrientation = self.view.window.windowScene.interfaceOrientation;
         if(UIInterfaceOrientationIsLandscape(currentOrientation)) {
             safeAreaInsets.top = 0;
         }
@@ -559,13 +559,15 @@
 }
 
 - (void)updateMaximizedFrameWithSettings:(UIMutableApplicationSceneSettings *)settings {
-    CGRect maxFrame = UIEdgeInsetsInsetRect(self.view.window.frame, [self updateMaximizedSafeAreaWithSettings:settings]);
+    CGRect windowBounds = [self.view.superview convertRect:self.view.window.bounds fromView:self.view.window];
+    CGRect maxFrame = UIEdgeInsetsInsetRect(windowBounds, [self updateMaximizedSafeAreaWithSettings:settings]);
     self.view.frame = maxFrame;
 }
 
 - (void)updateWindowedFrameWithSettings:(UIMutableApplicationSceneSettings *)settings {
     UIEdgeInsets safeAreaInsets = self.view.window.safeAreaInsets;
-    CGRect maxFrame = UIEdgeInsetsInsetRect(self.view.window.frame, safeAreaInsets);
+    CGRect windowBounds = [self.view.superview convertRect:self.view.window.bounds fromView:self.view.window];
+    CGRect maxFrame = UIEdgeInsetsInsetRect(windowBounds, safeAreaInsets);
     settings.peripheryInsets = UIEdgeInsetsZero;
     settings.safeAreaInsetsPortrait = UIEdgeInsetsZero;
     
@@ -584,7 +586,8 @@
 
 - (void)updateOriginalFrame {
     if(_isMaximized) return;
-    CGRect maxFrame = UIEdgeInsetsInsetRect(self.view.window.frame, self.view.window.safeAreaInsets);
+    CGRect windowBounds = [self.view.superview convertRect:self.view.window.bounds fromView:self.view.window];
+    CGRect maxFrame = UIEdgeInsetsInsetRect(windowBounds, self.view.window.safeAreaInsets);
     // save origin as normalized coordinates
     self.originalFrame = CGRectMake(self.view.frame.origin.x / maxFrame.size.width, self.view.frame.origin.y / maxFrame.size.height, self.view.frame.size.width, self.view.frame.size.height);
 }
