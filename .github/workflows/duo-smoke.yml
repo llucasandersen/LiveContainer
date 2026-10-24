@@ -1,0 +1,47 @@
+name: Duo Simulator Smoke Test
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '27.1'
+      - name: Build simulator app
+        run: |
+          set -o pipefail
+          xcodebuild build -scheme LiveContainer -project LiveContainer.xcodeproj -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -configuration Debug -derivedDataPath simulator-build CODE_SIGNING_ALLOWED=NO | tee simulator-build.log | xcbeautify
+      - name: Launch on Duo simulator and capture display
+        run: |
+          set -e
+          xcrun simctl list devices available -j > devices.json
+          device=$(python3 -c "import json; d=json.load(open('devices.json')); print(next(x['udid'] for v in d['devices'].values() for x in v if 'Duo' in x['name']))")
+          xcrun simctl boot "$device"
+          xcrun simctl bootstatus "$device" -b
+          xcrun simctl install "$device" simulator-build/Build/Products/Debug-iphonesimulator/LiveContainer.app
+          xcrun simctl launch "$device" com.kdt.livecontainer.AAAAA11111 | tee simulator-launch.txt
+          sleep 8
+          xcrun simctl io "$device" screenshot duo-simulator.png
+          xcrun simctl io "$device" enumerate > displays.txt
+          xcrun simctl io help > simctl-io-help.txt 2>&1 || true
+          xcrun simctl spawn "$device" launchctl list > simulator-processes.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: duo-simulator-evidence
+          path: |
+            simulator-build.log
+            simulator-launch.txt
+            duo-simulator.png
+            devices.json
+            displays.txt
+            simctl-io-help.txt
+            simulator-processes.txt
+          if-no-files-found: ignore
