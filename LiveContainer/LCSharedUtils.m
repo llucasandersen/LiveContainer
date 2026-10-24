@@ -21,7 +21,7 @@ NSString* FBSOpenApplicationOptionKeyPayloadURL = @"__PayloadURL";
         void* taskSelf = SecTaskCreateFromSelf(NULL);
         CFErrorRef error = NULL;
         CFTypeRef cfans = SecTaskCopyValueForEntitlement(taskSelf, CFSTR("com.apple.developer.team-identifier"), &error);
-        if(CFGetTypeID(cfans) == CFStringGetTypeID()) {
+        if(cfans && CFGetTypeID(cfans) == CFStringGetTypeID()) {
             ans = (__bridge NSString*)cfans;
         }
         CFRelease(taskSelf);
@@ -57,10 +57,13 @@ NSString* FBSOpenApplicationOptionKeyPayloadURL = @"__PayloadURL";
     static dispatch_once_t once;
     static NSString *appGroupID = @"Unknown";
     dispatch_once(&once, ^{
-        NSArray* possibleAppGroups = @[
-            [@"group.com.SideStore.SideStore." stringByAppendingString:[self teamIdentifier]],
-            [@"group.com.rileytestut.AltStore." stringByAppendingString:[self teamIdentifier]]
-        ];
+        // Simulator and incompletely signed installs may have no team ID.
+        // Still allow startup and the existing app-group diagnostics/fallbacks.
+        NSString *teamIdentifier = [self teamIdentifier];
+        NSArray* possibleAppGroups = teamIdentifier.length ? @[
+            [@"group.com.SideStore.SideStore." stringByAppendingString:teamIdentifier],
+            [@"group.com.rileytestut.AltStore." stringByAppendingString:teamIdentifier]
+        ] : @[];
         
         // we prefer app groups with "Apps" in it, which indicate this app group is actually used by the store.
         for (NSString *group in possibleAppGroups) {
@@ -95,6 +98,9 @@ NSString* FBSOpenApplicationOptionKeyPayloadURL = @"__PayloadURL";
         }
         CFErrorRef error = NULL;
         void* taskSelf = SecTaskCreateFromSelf(NULL);
+        if (!taskSelf) {
+            return;
+        }
         CFTypeRef value = SecTaskCopyValueForEntitlement(taskSelf, CFSTR("com.apple.security.application-groups"), &error);
         CFRelease(taskSelf);
         
