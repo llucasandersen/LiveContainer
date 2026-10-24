@@ -17,7 +17,7 @@ jobs:
       - name: Build simulator app
         run: |
           set -o pipefail
-          xcodebuild build -scheme LiveContainer -project LiveContainer.xcodeproj -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -configuration Debug -derivedDataPath simulator-build CODE_SIGNING_ALLOWED=NO | tee simulator-build.log | xcbeautify
+          xcodebuild build -scheme LiveContainer -project LiveContainer.xcodeproj -sdk iphonesimulator -arch arm64 -destination 'generic/platform=iOS Simulator' -configuration Debug -derivedDataPath simulator-build CODE_SIGNING_ALLOWED=NO | tee simulator-build.log | xcbeautify
       - name: Launch on Duo simulator and capture display
         run: |
           set -e
