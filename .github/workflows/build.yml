@@ -32,6 +32,8 @@ jobs:
           xcodebuild archive -archivePath archive -scheme LiveContainer -project LiveContainer.xcodeproj -sdk iphoneos -arch arm64 -configuration Release CODE_SIGNING_ALLOWED=NO | tee build.log | xcbeautify
       - name: Package LiveContainer and SideStore
         run: |
+          python3 -m venv .refresh-tests
+          .refresh-tests/bin/pip install -r .github/requirements-test.txt
           sh .github/build_github.sh
           mv LiveContainer+SideStore.ipa LiveContainer+SideStore-Duo.ipa
       - name: Validate packaged Duo IPA
@@ -43,6 +45,7 @@ jobs:
           path: |
             LiveContainer+SideStore-Duo.ipa
             duo-ipa-validation.json
+            sidestore-refresh-patch.json
           if-no-files-found: error
       - name: Upload build log
         if: always()

@@ -50,6 +50,8 @@ mv ./tmp/Payload/SideStore.app ./Payload/LiveContainer.app/Frameworks/SideStoreA
 ./dylibify ./Payload/LiveContainer.app/Frameworks/SideStoreApp.framework/SideStore ./Payload/LiveContainer.app/Frameworks/SideStoreApp.framework/SideStore.dylib
 rm ./Payload/LiveContainer.app/Frameworks/SideStoreApp.framework/SideStore
 mv ./Payload/LiveContainer.app/Frameworks/SideStoreApp.framework/SideStore.dylib ./Payload/LiveContainer.app/Frameworks/SideStoreApp.framework/SideStore
+.refresh-tests/bin/python .github/test_sidestore_refresh.py ./Payload/LiveContainer.app/Frameworks/SideStoreApp.framework/SideStore || exit 1
+python3 .github/patch_sidestore_refresh.py ./Payload/LiveContainer.app/Frameworks/SideStoreApp.framework/SideStore > sidestore-refresh-patch.json || exit 1
 ldid -S"" ./Payload/LiveContainer.app/Frameworks/SideStoreApp.framework/SideStore
 cp ./.github/sidelc/LCAppInfo.plist ./Payload/LiveContainer.app/Frameworks/SideStoreApp.framework/
 
