@@ -28,10 +28,16 @@ jobs:
           xcrun simctl install "$device" simulator-build/Build/Products/Debug-iphonesimulator/LiveContainer.app
           xcrun simctl launch "$device" com.kdt.livecontainer.AAAAA11111 | tee simulator-launch.txt
           sleep 8
-          xcrun simctl io "$device" screenshot duo-simulator.png
           xcrun simctl io "$device" enumerate > displays.txt
-          xcrun simctl io help > simctl-io-help.txt 2>&1 || true
+          xcrun simctl help io > simctl-io-help.txt 2>&1
           xcrun simctl spawn "$device" launchctl list > simulator-processes.txt
+          captured=0
+          for display in 1 3; do
+            if xcrun simctl io "$device" screenshot --display="$display" "duo-display-$display.png"; then
+              captured=1
+            fi
+          done
+          test "$captured" = 1
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -39,7 +45,7 @@ jobs:
           path: |
             simulator-build.log
             simulator-launch.txt
-            duo-simulator.png
+            duo-display-*.png
             devices.json
             displays.txt
             simctl-io-help.txt
