@@ -28,6 +28,9 @@ jobs:
           xcrun simctl install "$device" simulator-build/Build/Products/Debug-iphonesimulator/LiveContainer.app
           xcrun simctl launch "$device" com.kdt.livecontainer.AAAAA11111 | tee simulator-launch.txt
           sleep 8
+          mkdir -p diagnostics
+          xcrun simctl spawn "$device" log show --last 5m --style compact --predicate 'process == "LiveContainer" OR eventMessage CONTAINS[c] "com.kdt.livecontainer"' > diagnostics/runtime.log 2>&1 || true
+          find "$HOME/Library/Logs/DiagnosticReports" -type f -iname '*LiveContainer*' -exec cp {} diagnostics/ \; || true
           xcrun simctl io "$device" enumerate > displays.txt
           xcrun simctl help io > simctl-io-help.txt 2>&1
           xcrun simctl spawn "$device" launchctl list > simulator-processes.txt
@@ -38,6 +41,7 @@ jobs:
             fi
           done
           test "$captured" = 1
+          grep -i 'com.kdt.livecontainer' simulator-processes.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -50,4 +54,5 @@ jobs:
             displays.txt
             simctl-io-help.txt
             simulator-processes.txt
+            diagnostics/
           if-no-files-found: ignore
